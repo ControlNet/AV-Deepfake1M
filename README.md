@@ -43,7 +43,8 @@ methods.
 
 ### Download
 
-To use this AV-Deepfake1M dataset, you should agree the [terms and conditions](TERMS_AND_CONDITIONS.md).
+To use this AV-Deepfake1M dataset, you should agree the [terms and conditions](TERMS_AND_CONDITIONS.md) and 
+the [CC BY-NC 4.0 LICENCE](LICENSE).
 
 Download link: TBD.
 
