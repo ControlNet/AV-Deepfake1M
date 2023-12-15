@@ -46,16 +46,19 @@ methods.
 To use this AV-Deepfake1M dataset, you should agree the [terms and conditions](TERMS_AND_CONDITIONS.md) and 
 the [CC BY-NC 4.0 license](LICENSE).
 
-Download link: TBD.
+Download link: 
+[OneDrive](https://monashuni-my.sharepoint.com/:f:/g/personal/zhixi_cai_monash_edu/EgeT8-G5RPdLnHqVw33ePRUBwhR_yRIQGF1cNblgXe4U8A?e=TpIsxA),
+[HuggingFace](https://huggingface.co/datasets/ControlNet/AV-Deepfake1M),
+[Monash Uni's Repository](https://bridges.monash.edu/articles/dataset/AV-Deepfake1M/24631812).
 
-The link above contains everything you need for this dataset. In the table below, we provide the link for each
-split of the dataset.
+The link above contains everything you need for this dataset. In the table below, we provide the file name for each
+split of the dataset. Currently, the test metadata/label is not available.
 
-| Split | Video | Full Metadata | Minimum Metadata |
-|-------|-------|---------------|------------------|
-| Train | TBD   | TBD           | TBD              |
-| Val   | TBD   | TBD           | TBD              |
-| Test  | TBD   | TBD           | TBD              |
+| Split | Video               | Full Metadata        | Minimum Metadata      |
+|-------|---------------------|----------------------|-----------------------|
+| Train | `train/train.zip.*` | `train_metadata.zip` | `train_metadata.json` |
+| Val   | `val/val.zip.*`     | `val_metadata.zip`   | `val_metadata.json`   |
+| Test  | `test/test.zip.*`   | TBD in 2024          | TBD in 2024           |
 
 Extract the multi-volume archive with `7z`.
 ```bash
