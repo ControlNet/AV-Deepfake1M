@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you find this work useful in your research, please cite it."
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Cai"
+    given-names: "Zhixi"
+  - family-names: "Ghosh"
+    given-names: "Shreya"
+  - family-names: "Adatia"
+    given-names: "Aman Pankaj"
+  - family-names: "Hayat"
+    given-names: "Munawar"
+  - family-names: "Dhall"
+    given-names: "Abhinav"
+  - family-names: "Stefanov"
+    given-names: "Kalin"
+  journal: "arXiv preprint arXiv:2311.15308"
+  title: "AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset"
+  year: 2023
