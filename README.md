@@ -15,6 +15,8 @@
     <a href="https://github.com/ControlNet/AV-Deepfake1M/stargazers">
         <img src="https://img.shields.io/github/stars/ControlNet/AV-Deepfake1M?style=flat-square">
     </a>
+    <a href="https://pypi.org/project/avdeepfake1m/"><img src="https://img.shields.io/pypi/v/avdeepfake1m?style=flat-square"></a>
+    <a href="https://pypi.org/project/avdeepfake1m/"><img src="https://img.shields.io/pypi/dm/avdeepfake1m?style=flat-square"></a>
     <a href="https://github.com/ControlNet/AV-Deepfake1M/blob/master/LICENSE">
         <img src="https://img.shields.io/badge/license-CC%20BY--NC%204.0-97ca00?style=flat-square">
     </a>
