@@ -76,6 +76,52 @@ The metadata is a json file for each subset (train, val), which is a list of dic
 - video_frames: the number of frames in the video.
 - audio_frames: the number of frames in the audio.
 
+## SDK
+
+We provide a Python library `avdeepfake1m` to load the dataset and evaluation.
+
+### Installation
+
+```bash
+pip install avdeepfake1m
+```
+
+### Usage
+
+Prepare the dataset as follows.
+
+```
+|- train_metadata.json
+|- train_metadata
+|  |- ...
+|- train
+|  |- ...
+|- val_metadata.json
+|- val_metadata
+|  |- ...
+|- val
+|  |- ...
+|- test_files.txt
+|- test
+```
+
+Load the dataset.
+
+```python
+from avdeepfake1m.loader import AVDeepfake1mDataModule
+
+# access to Lightning DataModule
+dm = AVDeepfake1mDataModule("/path/to/dataset")
+```
+
+Evaluate the predictions. Firstly prepare the predictions as described in the [details](https://deepfakes1m.github.io/details). Then run the following code.
+
+```python
+from avdeepfake1m.evaluation import ap_ar_1d, auc
+print(ap_ar_1d("<PREDICTION_JSON>", "<METADATA_JSON>", "file", "fake_segments", 1, [0.5, 0.75, 0.9, 0.95], [50, 30, 20, 10, 5], [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]))
+print(auc("<PREDICTION_TXT>", "<METADATA_JSON>"))
+```
+
 ## License
 
 The dataset is under the [EULA](eula.pdf). You need to agree and sign the EULA to access the dataset.

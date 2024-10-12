@@ -1,0 +1,93 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "avdeepfake1m"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Utilities"
+]
+authors = [
+    {name = "ControlNet", email = "smczx@hotmail.com"}
+]
+dynamic = ["version"]
+readme = "README.md"
+keywords = ["pytorch", "AI"]
+dependencies = [
+    "torch",
+    "lightning>=2",
+    "tqdm",
+    "einops",
+    "opencv-python",
+    "numpy>=1,<2",
+    "torchvision",
+    "torchaudio",
+    "av",
+    "pandas~=2.0",
+    "torchmetrics~=1.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ControlNet/AV-Deepfake1M"
+"Source Code" = "https://github.com/ControlNet/AV-Deepfake1M"
+"Bug Tracker" = "https://github.com/ControlNet/AV-Deepfake1M/issues"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "avdeepfake1m._evaluation"
+python-source = "python"
+
+[tool.pixi.project]
+channels = ["pytorch", "conda-forge/label/rust_dev", "conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+[tool.pixi.dependencies]
+pytorch = { version = "~=2.2.2", channel = "pytorch" }
+torchvision = { version = "~=0.17.2", channel = "pytorch" }
+torchaudio = { version = "~=2.2.2", channel = "pytorch" }
+cpuonly = { version = "~=2.0", channel = "pytorch" }  # for developing the dataloader and evaluator only
+python = "~=3.11.0"
+numpy = { version = "~=1.0", channel = "conda-forge" }
+ffmpeg = { version = "*", channel = "conda-forge" }
+av = { version = "*", channel = "conda-forge" }
+pandas = ">=2.2.3,<3"
+torchmetrics = ">=1.4.2,<2"
+
+[tool.pixi.target.linux-64.dependencies]
+rust = { version = "*", channel = "conda-forge/label/rust_dev" }
+
+[tool.pixi.target.osx-64.dependencies]
+rust_osx-64 = { version = "*", channel = "conda-forge/label/rust_dev" }
+
+[tool.pixi.target.win-64.dependencies]
+rust_win-64 = { version = "*", channel = "conda-forge/label/rust_dev" }
+
+[tool.pixi.target.osx-arm64.dependencies]
+rust_osx-arm64 = { version = "*", channel = "conda-forge/label/rust_dev" }
+
+[tool.pixi.pypi-dependencies]
+avdeepfake1m = { path = ".", editable = true }
+
+[tool.pixi.build-dependencies]
+maturin = ">=1.7,<2.0"
+setuptools = "*"
+pip = "*"
+
+[tool.pixi.tasks]
+develop = "maturin develop"
+build = "maturin build --release"
