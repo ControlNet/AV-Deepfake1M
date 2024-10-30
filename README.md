@@ -26,7 +26,7 @@
 </div>
 
 This is the official repository for the paper 
-[AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset](http://arxiv.org/abs/2311.15308).
+[AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset](http://arxiv.org/abs/2311.15308) (Best Award).
 
 ## Abstract
 The detection and localization of highly realistic deepfake audio-visual content are challenging even for the most 
