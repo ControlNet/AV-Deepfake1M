@@ -135,10 +135,21 @@ The other parts of this project is under the CC BY-NC 4.0 license. See [LICENSE]
 If you find this work useful in your research, please cite it.
 
 ```bibtex
-@article{cai2023avdeepfake1m,
-  title = {AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset},
-  action = {Cai, Zhixi and Ghosh, Shreya and Adatia, Aman Pankaj and Hayat, Munawar and Dhall, Abhinav and Stefanov, Kalin},
-  journal = {arXiv preprint arXiv:2311.15308},
-  year = {2023},
+@inproceedings{caiAVDeepfake1M2024,
+	address = {Melbourne, VIC, Australia},
+	series = {{MM} '24},
+	title = {{AV}-{Deepfake1M}: {A} {Large}-{Scale} {LLM}-{Driven} {Audio}-{Visual} {Deepfake} {Dataset}},
+	copyright = {All rights reserved},
+	isbn = {9798400706868},
+	shorttitle = {{AV}-{Deepfake1M}},
+	url = {https://dl.acm.org/doi/10.1145/3664647.3680795},
+	doi = {10.1145/3664647.3680795},
+	urldate = {2024-10-29},
+	booktitle = {Proceedings of the 32nd {ACM} {International} {Conference} on {Multimedia}},
+	publisher = {Association for Computing Machinery},
+	author = {Cai, Zhixi and Ghosh, Shreya and Adatia, Aman Pankaj and Hayat, Munawar and Dhall, Abhinav and Gedeon, Tom and Stefanov, Kalin},
+	year = {2024},
+	pages = {7414--7423},
 }
+
 ```
