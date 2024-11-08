@@ -1,7 +1,8 @@
 cff-version: 1.2.0
 message: "If you find this work useful in your research, please cite it."
 preferred-citation:
-  type: article
+  type: conference-paper
+  title: "AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset"
   authors:
   - family-names: "Cai"
     given-names: "Zhixi"
@@ -15,6 +16,10 @@ preferred-citation:
     given-names: "Abhinav"
   - family-names: "Stefanov"
     given-names: "Kalin"
-  journal: "arXiv preprint arXiv:2311.15308"
-  title: "AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset"
+  collection-title: "Proceedings of the 32nd ACM International Conference on Multimedia"
   year: 2023
+  location:
+    name: "Melbourne, Australia"
+  start: 7414
+  end: 7423
+  doi: "10.1145/3664647.3680795"
