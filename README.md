@@ -41,6 +41,9 @@ state-of-the-art deepfake detection and localization methods indicates a signifi
 previous datasets. The proposed dataset will play a vital role in building the next-generation deepfake localization 
 methods.
 
+https://github.com/user-attachments/assets/d91aee8a-0fb5-4dff-ba20-86420332fed5
+
+
 ## Dataset
 
 ### Download
