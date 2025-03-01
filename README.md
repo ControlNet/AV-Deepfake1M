@@ -48,7 +48,7 @@ https://github.com/user-attachments/assets/d91aee8a-0fb5-4dff-ba20-86420332fed5
 
 ### Download
 
-We're hosting [1M-Deepfakes Detection Challenge](https://deepfakes1m.github.io/) at ACM MM 2024.
+We're hosting [1M-Deepfakes Detection Challenge](https://deepfakes1m.github.io/2024) at ACM MM 2024.
 
 ### Baseline Benchmark
 
@@ -119,7 +119,7 @@ from avdeepfake1m.loader import AVDeepfake1mDataModule
 dm = AVDeepfake1mDataModule("/path/to/dataset")
 ```
 
-Evaluate the predictions. Firstly prepare the predictions as described in the [details](https://deepfakes1m.github.io/details). Then run the following code.
+Evaluate the predictions. Firstly prepare the predictions as described in the [details](https://deepfakes1m.github.io/2024/details). Then run the following code.
 
 ```python
 from avdeepfake1m.evaluation import ap_ar_1d, auc
