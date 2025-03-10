@@ -147,3 +147,15 @@ If you find this work useful in your research, please cite it.
   doi={10.1145/3664647.3680795}
 }
 ```
+
+The challenge summary paper:
+```bibtex
+@inproceedings{cai20241m,
+  title={1M-Deepfakes Detection Challenge},
+  author={Cai, Zhixi and Dhall, Abhinav and Ghosh, Shreya and Hayat, Munawar and Kollias, Dimitrios and Stefanov, Kalin and Tariq, Usman},
+  booktitle={Proceedings of the 32nd ACM International Conference on Multimedia},
+  pages={11355--11359},
+  year={2024},
+  doi={10.1145/3664647.3689145}
+}
+```
