@@ -28,6 +28,13 @@
 This is the official repository for the paper 
 [AV-Deepfake1M: A Large-Scale LLM-Driven Audio-Visual Deepfake Dataset](https://dl.acm.org/doi/abs/10.1145/3664647.3680795) (Best Award).
 
+## News
+
+- [2025/04/08] 🏆 [**2025 1M-Deepfakes Challenge**](https://deepfakes1m.github.io/2025) starts. New dataset **AV-Deepfake1M++** is released with it.
+- [2024/10/13] 🚀 [**PYPI package**](https://pypi.org/project/avdeepfake1m/) is released.
+- [2024/07/15] 🔥 [**AV-Deepfake1M** paper](https://dl.acm.org/doi/abs/10.1145/3664647.3680795) is accepted in MM 2024.
+- [2024/03/09] 🏆 [**2024 1M-Deepfakes Challenge**](https://deepfakes1m.github.io/2024) starts.
+
 ## Abstract
 The detection and localization of highly realistic deepfake audio-visual content are challenging even for the most 
 advanced state-of-the-art methods. While most of the research efforts in this domain are focused on detecting 
