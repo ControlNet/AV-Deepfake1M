@@ -538,3 +538,64 @@ def sample_indexes(total_frames: int, n_frames: int, temporal_sample_rate: int):
         print(f"total_frames: {total_frames}, n_frames: {n_frames}, temporal_sample_rate: {temporal_sample_rate}")
         raise e
     return torch.arange(n_frames) * temporal_sample_rate + start_ind
+
+
+class AVDeepfake1mPlusPlusImages(IterableDataset):
+
+    def __init__(self, subset: str, data_root: str = "data",
+        image_size: int = 96,
+        use_video_label: bool = False,
+        use_seg_label: Optional[int] = None,
+        take_num: Optional[int] = None,
+        metadata: Optional[List[Metadata]] = None,
+    ):
+        self.subset = subset
+        self.data_root = data_root
+        self.image_size = image_size
+        self.use_video_label = use_video_label
+        if self.use_video_label:
+            assert use_seg_label is None
+        self.use_seg_label = use_seg_label
+        if metadata is None:
+            metadata_json = read_json(os.path.join(self.data_root, f"{subset}_metadata.json"))
+            self.metadata = [Metadata(**meta, fps=25) for meta in metadata_json]
+        else:
+            self.metadata = metadata
+
+        if take_num is not None:
+            self.metadata = self.metadata[:take_num]
+
+        self.total_frames = sum([each.video_frames for each in self.metadata])
+        print("Load {} data in {}.".format(len(self.metadata), subset))
+
+    def __len__(self):
+        return self.total_frames
+
+    def __iter__(self):
+        for meta in self.metadata:
+            video = read_video_fast(os.path.join(self.data_root,self.subset, meta.file))
+            if self.image_size != 224:
+                video = resize_video(video, (96, 96))
+            if self.use_video_label:
+                label = float(len(meta.fake_periods) > 0)
+                for frame in video:
+                    yield frame, label
+            elif self.use_seg_label:
+                frame_label = torch.zeros(len(video))
+                for begin, end in meta.fake_periods:
+                    begin = int(begin * 25)
+                    end = int(end * 25)
+                    frame_label[begin: end] = 1
+                seg_label = torch.split(frame_label, self.use_seg_label)
+                seg_label = torch.nn.utils.rnn.pad_sequence(seg_label, batch_first=True)
+                seg_label = (seg_label.sum(dim=1) > 0).float().repeat_interleave(self.use_seg_label)
+                for i, frame in enumerate(video):
+                    yield frame, seg_label[i]
+            else:
+                frame_label = torch.zeros(len(video))
+                for begin, end in meta.fake_periods:
+                    begin = int(begin * 25)
+                    end = int(end * 25)
+                    frame_label[begin: end] = 1
+                for i, frame in enumerate(video):
+                    yield frame, frame_label[i]
