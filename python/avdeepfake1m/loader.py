@@ -15,7 +15,7 @@ from torch.utils.data import Dataset
 from tqdm.auto import tqdm
 
 from .utils import read_json, read_video, resize_video, iou_with_anchors, ioa_with_anchors, \
-    read_video_fast, iou_1d
+    read_video_fast, read_video, iou_1d
 
 
 @dataclass
@@ -573,7 +573,7 @@ class AVDeepfake1mPlusPlusImages(IterableDataset):
 
     def __iter__(self):
         for meta in self.metadata:
-            video = read_video_fast(os.path.join(self.data_root,self.subset, meta.file))
+            video = read_video_fast(os.path.join(self.data_root, self.subset, meta.file))
             if self.image_size != 224:
                 video = resize_video(video, (96, 96))
             if self.use_video_label:
@@ -599,3 +599,35 @@ class AVDeepfake1mPlusPlusImages(IterableDataset):
                     frame_label[begin: end] = 1
                 for i, frame in enumerate(video):
                     yield frame, frame_label[i]
+
+
+class AVDeepfake1mPlusPlusVideo(Dataset):
+
+    def __init__(self, subset: str, data_root: str = "data",
+        image_size: int = 96,
+        take_num: Optional[int] = None,
+        metadata: Optional[List[Metadata]] = None,
+    ):
+        self.subset = subset
+        self.data_root = data_root
+        self.image_size = image_size
+        if metadata is None:
+            metadata_json = read_json(os.path.join(self.data_root, f"{subset}_metadata.json"))
+            self.metadata = [Metadata(**meta, fps=25) for meta in metadata_json]
+        else:
+            self.metadata = metadata
+
+        if take_num is not None:
+            self.metadata = self.metadata[:take_num]
+        print("Load {} data in {}.".format(len(self.metadata), subset))
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def __getitem__(self, index):
+        meta = self.metadata[index]
+        video, audio, _ = read_video(os.path.join(self.data_root, self.subset, meta.file))
+        if self.image_size != 224:
+            video = resize_video(video, (self.image_size, self.image_size))
+        label = len(meta.fake_periods) > 0
+        return video, audio, label

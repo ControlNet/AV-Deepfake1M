@@ -18,5 +18,5 @@ def ap_ar_1d(
     pass
 
 
-def auc(prediction_file: str, reference_path: str) -> float:
+def auc(prediction_file: str, reference_path: str, file_key: str, value_key: str) -> float:
     pass

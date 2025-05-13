@@ -68,7 +68,7 @@ if __name__ == "__main__":
         max_epochs=args.max_epochs,
         callbacks=[
             ModelCheckpoint(
-                dirpath=f"./ckpt1/{args.model}",
+                dirpath=f"./ckpt/{args.model}",
                 save_last=True,
                 filename=args.model + "-{epoch}-{val_loss:.3f}",
                 monitor=monitor,

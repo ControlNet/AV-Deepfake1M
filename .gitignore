@@ -440,3 +440,5 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+lightning_logs

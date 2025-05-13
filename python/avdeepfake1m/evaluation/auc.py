@@ -5,7 +5,7 @@ from torchmetrics import AUROC
 from ..utils import read_json
 
 
-def auc(prediction_file: str, reference_path: str) -> float:
+def auc(prediction_file: str, reference_path: str, file_key: str, value_key: str) -> float:
 
     prediction = pd.read_csv(prediction_file, header=None, sep=";")
     # convert to dict
@@ -19,8 +19,8 @@ def auc(prediction_file: str, reference_path: str) -> float:
     truth = []
     prediction = []
     for gt_item in gt:
-        key = gt_item["file"]
-        truth.append(int(len(gt_item["segments"]) > 0))
+        key = gt_item[file_key]
+        truth.append(int(len(gt_item[value_key]) > 0))
         prediction.append(prediction_dict[key])
 
     # to tensor for torchmetrics

@@ -131,7 +131,7 @@ Evaluate the predictions. Firstly prepare the predictions as described in the [d
 ```python
 from avdeepfake1m.evaluation import ap_ar_1d, auc
 print(ap_ar_1d("<PREDICTION_JSON>", "<METADATA_JSON>", "file", "fake_segments", 1, [0.5, 0.75, 0.9, 0.95], [50, 30, 20, 10, 5], [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]))
-print(auc("<PREDICTION_TXT>", "<METADATA_JSON>"))
+print(auc("<PREDICTION_TXT>", "<METADATA_JSON>", "file", "fake_segments"))
 ```
 
 ## License
