@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional, List, Callable, Any, Union, Tuple
 
 import numpy as np
@@ -14,7 +13,7 @@ from torch.utils.data import DataLoader, RandomSampler, IterableDataset
 from torch.utils.data import Dataset
 from tqdm.auto import tqdm
 
-from .utils import read_json, read_video, resize_video, iou_with_anchors, ioa_with_anchors, \
+from .utils import read_json, read_video, resize_video, iou_with_anchors, \
     read_video_fast, read_video, iou_1d
 
 
@@ -65,7 +64,8 @@ class AVDeepfake1m(Dataset):
         file_list: Optional[List[str]] = None,
         get_meta_attr: Callable[[Metadata, Tensor, Tensor, T_LABEL], List[Any]] = None,
         require_match_scores: bool = False,
-        return_file_name: bool = False
+        return_file_name: bool = False,
+        is_plusplus: bool = False
     ):
         self.subset = subset
         self.root = data_root
@@ -78,6 +78,7 @@ class AVDeepfake1m(Dataset):
         self.get_meta_attr = get_meta_attr
         self.require_match_scores = require_match_scores
         self.return_file_name = return_file_name
+        self.is_plusplus = is_plusplus  # For AV-Deepfake1M++, we modify the structure a little bit.
 
         label_dir = os.path.join(self.root, "label")
         if not os.path.exists(label_dir):
@@ -97,14 +98,15 @@ class AVDeepfake1m(Dataset):
         else:
             self.anchor_x_min = None
             self.anchor_x_max = None
+
         print(f"Load {len(self.file_list)} data in {subset}.")
 
-    def __getitem__(self, index: int) -> List[Tensor]:
+    def __getitem__(self, index: int) -> List[Union[Tensor, str, int]]:
         file = self.file_list[index]
 
         video, audio, _ = read_video(os.path.join(self.root, self.subset, file))
-        video = F.interpolate(video.permute(1, 0, 2, 3)[None], size=(self.temporal_size, 96, 96))[0]
-        audio = F.interpolate(audio.permute(1, 0)[None], size=self.audio_temporal_size, mode="linear")[0].permute(1, 0)
+        video = F.interpolate(video.float().permute(1, 0, 2, 3)[None], size=(self.temporal_size, 96, 96))[0]
+        audio = F.interpolate(audio.float().permute(1, 0)[None], size=self.audio_temporal_size, mode="linear")[0].permute(1, 0)
         video = self.video_transform(video)
         audio = self.audio_transform(audio)
         audio = self._get_log_mel_spectrogram(audio)
@@ -112,7 +114,11 @@ class AVDeepfake1m(Dataset):
         outputs = [video, audio]
 
         if self.subset != "test":
-            meta = read_json(os.path.join(self.root, self.subset + "_metadata", file.replace(".mp4", ".json")))
+            if self.is_plusplus:
+                subset_folder = self.subset
+            else:
+                subset_folder = self.subset + "_metadata"
+            meta = read_json(os.path.join(self.root, subset_folder, file.replace(".mp4", ".json")))
             meta = Metadata(**meta, fps=self.fps)
             if not self.require_match_scores:
                 label, visual_label, audio_label = self.get_label(file, meta)
@@ -127,7 +133,7 @@ class AVDeepfake1m(Dataset):
 
         return outputs
 
-    def get_label(self, file: str, meta: Metadata) -> Tensor:
+    def get_label(self, file: str, meta: Metadata) -> tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
         file_name = file.replace("/", "_").split(".")[0] + ".npz"
         path = os.path.join(self.root, "label", file_name)
         if os.path.exists(path):
@@ -167,43 +173,6 @@ class AVDeepfake1m(Dataset):
         torch.from_numpy(label_obj["visual_label"]) if type(label_obj["visual_label"]) == np.ndarray else None,
         torch.from_numpy(label_obj["audio_label"]) if type(label_obj["audio_label"]) == np.ndarray else None)
 
-    def get_label_with_match_scores(self, meta: Metadata) -> Tuple[Tensor, Tensor, Tensor]:
-        Path(os.path.join(self.root, "label")).mkdir(parents=True, exist_ok=True)
-        Path(os.path.join(self.root, "match_scores")).mkdir(parents=True, exist_ok=True)
-
-        boundary_map_file_name = meta.file.split("/")[-1].split(".")[0] + ".npy"
-        boundary_map_file_path = os.path.join(self.root, "label", boundary_map_file_name)
-
-        match_scores_file_name = meta.file.split("/")[-1].split(".")[0] + ".npz"
-        match_scores_file_path = os.path.join(self.root, "match_scores", match_scores_file_name)
-
-        if os.path.exists(boundary_map_file_path) and os.path.exists(match_scores_file_path):
-            try:
-                boundary_map = np.load(boundary_map_file_path)
-                match_scores = np.load(match_scores_file_path)
-            except ValueError:
-                pass
-            else:
-                return (
-                    torch.tensor(boundary_map),
-                    torch.tensor(match_scores["match_score_start"]),
-                    torch.tensor(match_scores["match_score_end"])
-                )
-
-        boundary_map, match_score_start, match_score_end = self._get_train_label(
-            meta.video_frames, meta.fake_periods, meta.video_frames
-        )
-
-        # cache label
-        np.save(boundary_map_file_path, boundary_map.numpy())
-        np.savez(
-            match_scores_file_path,
-            match_score_start=match_score_start.numpy(),
-            match_score_end=match_score_end.numpy()
-        )
-
-        return boundary_map, match_score_start, match_score_end
-
     def gen_label(self) -> None:
         # manually pre-generate label as npy
         for file in tqdm(self.file_list):
@@ -220,7 +189,7 @@ class AVDeepfake1m(Dataset):
         assert spec.shape == (64, 4 * self.temporal_size), "Wrong log mel-spectrogram setup in Dataset"
         return spec
 
-    def _get_train_label(self, frames, video_labels, temporal_scale, fps=25) -> T_LABEL:
+    def _get_train_label(self, frames, video_labels, temporal_scale, fps=25) -> Tensor:
         corrected_second = frames / fps
         temporal_gap = 1 / temporal_scale
 
@@ -255,32 +224,7 @@ class AVDeepfake1m(Dataset):
                     # [i, j]: Start in i, end in j.
 
         ##########################################################################################################
-        if not self.require_match_scores:
-            return gt_iou_map
-
-        gt_len_small = 3 * temporal_gap
-        gt_start_bboxs = np.stack((gt_xmins - gt_len_small / 2, gt_xmins + gt_len_small / 2), axis=1)
-        gt_end_bboxs = np.stack((gt_xmaxs - gt_len_small / 2, gt_xmaxs + gt_len_small / 2), axis=1)
-
-        ##########################################################################################################
-        # calculate the ioa for all timestamp
-        if len(gt_start_bboxs) > 0:
-            match_score_start = []
-            for jdx in range(len(self.anchor_x_min)):
-                match_score_start.append(np.max(ioa_with_anchors(self.anchor_x_min[jdx], self.anchor_x_max[jdx],
-                    gt_start_bboxs[:, 0], gt_start_bboxs[:, 1])))
-
-            match_score_end = []
-            for jdx in range(len(self.anchor_x_min)):
-                match_score_end.append(np.max(ioa_with_anchors(self.anchor_x_min[jdx], self.anchor_x_max[jdx],
-                    gt_end_bboxs[:, 0], gt_end_bboxs[:, 1])))
-            match_score_start = torch.Tensor(match_score_start)
-            match_score_end = torch.Tensor(match_score_end)
-        else:
-            match_score_start = torch.zeros(len(self.anchor_x_min))
-            match_score_end = torch.zeros(len(self.anchor_x_min))
-        ############################################################################################################
-        return gt_iou_map, match_score_start, match_score_end
+        return gt_iou_map
 
 
 def _default_get_meta_attr(meta: Metadata, video: Tensor, audio: Tensor, label: Tensor) -> List[Any]:
@@ -296,9 +240,10 @@ class AVDeepfake1mDataModule(LightningDataModule):
         max_duration: int = 30, fps: int = 25,
         require_match_scores: bool = False,
         batch_size: int = 1, num_workers: int = 0,
-        take_train: int = None, take_val: int = None, take_test: int = None,
+        take_train: Optional[int] = None, take_val: Optional[int] = None, take_test: Optional[int] = None,
         get_meta_attr: Callable[[Metadata, Tensor, Tensor, Tensor], List[Any]] = _default_get_meta_attr,
-        return_file_name: bool = False
+        return_file_name: bool = False,
+        is_plusplus: bool = False,
     ):
         super().__init__()
         self.root = root
@@ -313,6 +258,7 @@ class AVDeepfake1mDataModule(LightningDataModule):
         self.take_test = take_test
         self.get_meta_attr = get_meta_attr
         self.return_file_name = return_file_name
+        self.is_plusplus = is_plusplus
         self.Dataset = AVDeepfake1m
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -334,29 +280,33 @@ class AVDeepfake1mDataModule(LightningDataModule):
         self.train_dataset = self.Dataset("train", self.root, self.temporal_size, self.max_duration, self.fps,
             file_list=train_file_list, get_meta_attr=self.get_meta_attr,
             require_match_scores=self.require_match_scores,
-            return_file_name=self.return_file_name
+            return_file_name=self.return_file_name,
+            is_plusplus=self.is_plusplus
         )
         self.val_dataset = self.Dataset("val", self.root, self.temporal_size, self.max_duration, self.fps,
             file_list=val_file_list, get_meta_attr=self.get_meta_attr,
             require_match_scores=self.require_match_scores,
-            return_file_name=self.return_file_name
+            return_file_name=self.return_file_name,
+            is_plusplus=self.is_plusplus
         )
         self.test_dataset = self.Dataset("test", self.root, self.temporal_size, self.max_duration, self.fps,
             file_list=test_file_list, get_meta_attr=self.get_meta_attr,
             require_match_scores=self.require_match_scores,
-            return_file_name=self.return_file_name
+            return_file_name=self.return_file_name,
+            is_plusplus=self.is_plusplus
         )
 
     def train_dataloader(self) -> TRAIN_DATALOADERS:
         return DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=self.num_workers,
-            sampler=RandomSampler(self.train_dataset, num_samples=self.take_train, replacement=True)
+            sampler=RandomSampler(self.train_dataset, num_samples=self.take_train, replacement=True),
+            drop_last=True, pin_memory=True
         )
 
     def val_dataloader(self) -> EVAL_DATALOADERS:
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False, drop_last=False)
 
     def test_dataloader(self) -> EVAL_DATALOADERS:
-        return DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False, drop_last=False)
 
 
 class AVDeepfake1mImages(IterableDataset):

@@ -19,6 +19,8 @@ def read_video(path: str):
     video, audio, info = torchvision.io.read_video(path, pts_unit="sec")
     video = video.permute(0, 3, 1, 2) / 255
     audio = audio.permute(1, 0)
+    if audio.shape[0] == 0:
+        audio = torch.zeros(1, 1)
     return video, audio, info
 
 

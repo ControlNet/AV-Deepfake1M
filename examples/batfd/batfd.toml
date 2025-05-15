@@ -1,0 +1,35 @@
+name = "batfd"
+num_frames = 100  # T
+max_duration = 30  # D
+model_type = "batfd"
+dataset = "avdeepfake1m++"
+
+[model.video_encoder]
+type = "c3d"
+hidden_dims = [64, 96, 128, 128]
+cla_feature_in = 256  # C_f
+
+[model.audio_encoder]
+type = "cnn"
+hidden_dims = [32, 64, 64]
+cla_feature_in = 256  # C_f
+
+[model.frame_classifier]
+type = "lr"
+
+[model.boundary_module]
+hidden_dims = [512, 128]
+samples = 10  # N
+
+[optimizer]
+learning_rate = 0.00001
+frame_loss_weight = 2.0
+modal_bm_loss_weight = 1.0
+contrastive_loss_weight = 0.1
+contrastive_loss_margin = 0.99
+weight_decay = 0.0001
+
+[soft_nms]
+alpha = 0.7234
+t1 = 0.1968
+t2 = 0.4123

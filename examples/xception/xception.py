@@ -1,6 +1,6 @@
 import timm
 
-from pytorch_lightning import LightningModule
+from lightning.pytorch import LightningModule
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
 

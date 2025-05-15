@@ -441,4 +441,9 @@ docs/_build/
 # Pyenv
 .python-version
 
-lightning_logs
+/examples/batfd/lightning_logs
+/examples/batfd/ckpt
+/examples/batfd/output
+/examples/xception/lightning_logs
+/examples/xception/ckpt
+/examples/xception/output
