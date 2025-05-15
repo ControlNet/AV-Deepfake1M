@@ -40,6 +40,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Update version if tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "s/version = \"0.0.0\"/version = \"$VERSION\"/" Cargo.toml
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -70,6 +75,11 @@ jobs:
         with:
           python-version: "3.11"
       - uses: dtolnay/rust-toolchain@nightly
+      - name: Update version if tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "s/version = \"0.0.0\"/version = \"$VERSION\"/" Cargo.toml
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -99,6 +109,12 @@ jobs:
           python-version: "3.11"
           architecture: ${{ matrix.platform.target }}
       - uses: dtolnay/rust-toolchain@nightly
+      - name: Update version if tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "s/version = \"0.0.0\"/version = \"$VERSION\"/" Cargo.toml
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -128,6 +144,11 @@ jobs:
         with:
           python-version: "3.11"
       - uses: dtolnay/rust-toolchain@nightly
+      - name: Update version if tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "" "s/version = \"0.0.0\"/version = \"$VERSION\"/" Cargo.toml
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -146,6 +167,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
+      - name: Update version if tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          sed -i "s/version = \"0.0.0\"/version = \"$VERSION\"/" Cargo.toml
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
@@ -177,7 +203,7 @@ jobs:
         with:
           subject-path: 'wheels-*/*'
       - name: Publish to PyPI
-        if: "startsWith(github.ref, 'refs/tags/')"
+        if: startsWith(github.ref, 'refs/tags/')
         uses: PyO3/maturin-action@v1
         env:
           MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
