@@ -138,6 +138,8 @@ print(auc("<PREDICTION_TXT>", "<METADATA_JSON>", "file", "fake_segments"))
 
 The dataset is under the [EULA](eula.pdf). You need to agree and sign the EULA to access the dataset.
 
+The baseline Xception code [/examples/xception](/examples/xception) is under MIT Licence. The BA-TFD/BA-TFD+ code [/examples/batfd](/examples/batfd) is from [ControlNet/LAV-DF](https://github.com/ControlNet/LAV-DF) under CC BY-NC 4.0 Licence.
+
 The other parts of this project is under the CC BY-NC 4.0 license. See [LICENSE](LICENSE) for details.
 
 ## References
