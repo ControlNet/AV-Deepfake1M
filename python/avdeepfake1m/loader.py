@@ -267,10 +267,6 @@ class AVDeepfake1mDataModule(LightningDataModule):
         with open(os.path.join(self.root, "test_files.txt"), "r") as f:
             test_file_list = list(filter(lambda x: x != "", f.read().split("\n")))
 
-        # take subset of data if specified
-        if self.take_train is not None:
-            train_file_list = train_file_list[:self.take_train]
-
         if self.take_val is not None:
             val_file_list = val_file_list[:self.take_val]
 

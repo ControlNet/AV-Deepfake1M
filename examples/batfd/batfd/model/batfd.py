@@ -8,7 +8,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from avdeepfake1m.loader import Metadata
 
-from .loss import MaskedFrameLoss, MaskedBMLoss, MaskedContrastLoss
+from .loss import ContrastLoss
 from .audio_encoder import get_audio_encoder
 from .boundary_module import BoundaryModule
 from .frame_classifier import FrameLogisticRegression
@@ -53,9 +53,9 @@ class Batfd(LightningModule):
 
         self.fusion = ModalFeatureAttnBoundaryMapFusion(v_bm_in, a_bm_in, max_duration)
 
-        self.frame_loss = MaskedFrameLoss(BCEWithLogitsLoss())
-        self.contrast_loss = MaskedContrastLoss(margin=contrast_loss_margin)
-        self.bm_loss = MaskedBMLoss(MSELoss())
+        self.frame_loss = BCEWithLogitsLoss()
+        self.contrast_loss = ContrastLoss(margin=contrast_loss_margin)
+        self.bm_loss = MSELoss()
         self.weight_frame_loss = weight_frame_loss
         self.weight_modal_bm_loss = weight_modal_bm_loss
         self.weight_contrastive_loss = weight_contrastive_loss / (v_cla_feature_in * temporal_dim)
@@ -89,15 +89,15 @@ class Batfd(LightningModule):
         v_frame_cla: Tensor, a_frame_cla: Tensor, label: Tensor, n_frames: Tensor,
         v_bm_label, a_bm_label, v_frame_label, a_frame_label, contrast_label, v_features, a_features
     ) -> Dict[str, Tensor]:
-        fusion_bm_loss = self.bm_loss(fusion_bm_map, label, n_frames)
+        fusion_bm_loss = self.bm_loss(fusion_bm_map, label)
 
-        v_bm_loss = self.bm_loss(v_bm_map, v_bm_label, n_frames)
-        a_bm_loss = self.bm_loss(a_bm_map, a_bm_label, n_frames)
+        v_bm_loss = self.bm_loss(v_bm_map, v_bm_label)
+        a_bm_loss = self.bm_loss(a_bm_map, a_bm_label)
 
-        v_frame_loss = self.frame_loss(v_frame_cla.squeeze(1), v_frame_label, n_frames)
-        a_frame_loss = self.frame_loss(a_frame_cla.squeeze(1), a_frame_label, n_frames)
+        v_frame_loss = self.frame_loss(v_frame_cla.squeeze(1), v_frame_label)
+        a_frame_loss = self.frame_loss(a_frame_cla.squeeze(1), a_frame_label)
 
-        contrast_loss = torch.clip(self.contrast_loss(v_features, a_features, contrast_label, n_frames)
+        contrast_loss = torch.clip(self.contrast_loss(v_features, a_features, contrast_label)
                                    / (self.cla_feature_in * self.temporal_dim), max=1.)
 
         loss = fusion_bm_loss + \

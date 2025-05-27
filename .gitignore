@@ -447,3 +447,8 @@ docs/_build/
 /examples/xception/lightning_logs
 /examples/xception/ckpt
 /examples/xception/output
+wandb
+*.ckpt
+*.pth
+*.pt
+*.jit

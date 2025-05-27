@@ -4,6 +4,7 @@ import toml
 from lightning.pytorch import Trainer
 from lightning.pytorch.callbacks import ModelCheckpoint
 import torch
+torch.set_float32_matmul_precision('high')
 
 from avdeepfake1m.loader import AVDeepfake1mDataModule
 from batfd.model import Batfd, BatfdPlus
@@ -19,6 +20,7 @@ parser.add_argument("--precision", default=32)
 parser.add_argument("--num_train", type=int, default=None)
 parser.add_argument("--num_val", type=int, default=1000)
 parser.add_argument("--max_epochs", type=int, default=500)
+parser.add_argument("--logger", type=str, choices=["wandb", "tensorboard"], default="tensorboard")
 parser.add_argument("--resume", type=str, default=None)
 
 if __name__ == '__main__':
@@ -125,9 +127,15 @@ if __name__ == '__main__':
     except ValueError:
         precision: int | str = args.precision
         
-    monitor = "val_loss"
+    monitor = "metrics/val_loss"
 
-    trainer = Trainer(log_every_n_steps=50, precision=precision, max_epochs=args.max_epochs,
+    if args.logger == "wandb":
+        from lightning.pytorch.loggers import WandbLogger
+        logger = WandbLogger(name=config["name"], project=dataset)
+    else:
+        logger = True
+
+    trainer = Trainer(log_every_n_steps=20, precision=precision, max_epochs=args.max_epochs,
         callbacks=[
             ModelCheckpoint(
                 dirpath=f"./ckpt/{config['name']}", save_last=True, filename=config["name"] + "-{epoch}-{val_loss:.3f}",
@@ -140,8 +148,7 @@ if __name__ == '__main__':
         accelerator="auto",
         devices=args.gpus,
         strategy="auto" if args.gpus < 2 else "ddp",
+        logger=logger
     )
-
-    torch.set_float32_matmul_precision('high')
 
     trainer.fit(model, dm, ckpt_path=args.resume)

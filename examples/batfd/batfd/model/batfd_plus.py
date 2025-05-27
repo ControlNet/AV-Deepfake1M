@@ -8,7 +8,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ExponentialLR
 from avdeepfake1m.loader import Metadata
 
-from .loss import MaskedFrameLoss, MaskedContrastLoss, MaskedBsnppLoss
+from .loss import ContrastLoss, BsnppLoss
 from .audio_encoder import get_audio_encoder
 from .boundary_module_plus import BoundaryModulePlus, NestedUNet
 from .frame_classifier import FrameLogisticRegression
@@ -46,10 +46,6 @@ class BatfdPlus(LightningModule):
         v_bm_in = v_cla_feature_in + 1
         a_bm_in = a_cla_feature_in + 1
 
-        # Complementary Boundary Generator in BSN++ mechanism
-        self.video_comp_boundary_generator = NestedUNet(in_ch=v_bm_in, out_ch=2)
-        self.audio_comp_boundary_generator = NestedUNet(in_ch=a_bm_in, out_ch=2)
-
         # Proposal Relation Block in BSN++ mechanism
         self.video_boundary_module = BoundaryModulePlus(v_bm_in, boundary_features, boundary_samples, temporal_dim,
             max_duration
@@ -59,9 +55,14 @@ class BatfdPlus(LightningModule):
         )
 
         if cbg_feature_weight > 0:
+            # Complementary Boundary Generator in BSN++ mechanism
+            self.video_comp_boundary_generator = NestedUNet(in_ch=v_bm_in, out_ch=2)
+            self.audio_comp_boundary_generator = NestedUNet(in_ch=a_bm_in, out_ch=2)
             self.cbg_fusion_start = ModalFeatureAttnCfgFusion(v_bm_in, a_bm_in)
             self.cbg_fusion_end = ModalFeatureAttnCfgFusion(v_bm_in, a_bm_in)
         else:
+            self.video_comp_boundary_generator = None
+            self.audio_comp_boundary_generator = None
             self.cbg_fusion_start = None
             self.cbg_fusion_end = None
 
@@ -69,9 +70,9 @@ class BatfdPlus(LightningModule):
         self.prb_fusion_c = ModalFeatureAttnBoundaryMapFusion(v_bm_in, a_bm_in, max_duration)
         self.prb_fusion_p_c = ModalFeatureAttnBoundaryMapFusion(v_bm_in, a_bm_in, max_duration)
 
-        self.frame_loss = MaskedFrameLoss(BCEWithLogitsLoss())
-        self.contrast_loss = MaskedContrastLoss(margin=contrast_loss_margin)
-        self.bm_loss = MaskedBsnppLoss(cbg_feature_weight, prb_weight_forward)
+        self.frame_loss = BCEWithLogitsLoss()
+        self.contrast_loss = ContrastLoss(margin=contrast_loss_margin)
+        self.bm_loss = BsnppLoss(cbg_feature_weight, prb_weight_forward)
         self.weight_frame_loss = weight_frame_loss
         self.weight_modal_bm_loss = weight_modal_bm_loss
         self.weight_contrastive_loss = weight_contrastive_loss / (v_cla_feature_in * temporal_dim)
@@ -177,7 +178,7 @@ class BatfdPlus(LightningModule):
         ) = self.bm_loss(
             fusion_bm_map_p, fusion_bm_map_c, fusion_bm_map_p_c,
             fusion_cbg_start, fusion_cbg_end, fusion_cbg_start_back, fusion_cbg_end_back,
-            fusion_bm_label, fusion_start_label, fusion_end_label, n_frames
+            fusion_bm_label, fusion_start_label, fusion_end_label
         )
 
         (
@@ -185,7 +186,7 @@ class BatfdPlus(LightningModule):
         ) = self.bm_loss(
             v_bm_map_p, v_bm_map_c, v_bm_map_p_c,
             v_cbg_start, v_cbg_end, v_cbg_start_back, v_cbg_end_back,
-            v_bm_label, v_start_label, v_end_label, n_frames,
+            v_bm_label, v_start_label, v_end_label,
             v_cbg_feature, v_cbg_feature_back
         )
 
@@ -194,14 +195,14 @@ class BatfdPlus(LightningModule):
         ) = self.bm_loss(
             a_bm_map_p, a_bm_map_c, a_bm_map_p_c,
             a_cbg_start, a_cbg_end, a_cbg_start_back, a_cbg_end_back,
-            a_bm_label, a_start_label, a_end_label, n_frames,
+            a_bm_label, a_start_label, a_end_label,
             a_cbg_feature, a_cbg_feature_back
         )
 
-        v_frame_loss = self.frame_loss(v_frame_cla.squeeze(1), v_frame_label, n_frames)
-        a_frame_loss = self.frame_loss(a_frame_cla.squeeze(1), a_frame_label, n_frames)
+        v_frame_loss = self.frame_loss(v_frame_cla.squeeze(1), v_frame_label)
+        a_frame_loss = self.frame_loss(a_frame_cla.squeeze(1), a_frame_label)
 
-        contrast_loss = torch.clip(self.contrast_loss(v_features, a_features, contrast_label, n_frames)
+        contrast_loss = torch.clip(self.contrast_loss(v_features, a_features, contrast_label)
                                    / (self.cla_feature_in * self.temporal_dim), max=1.)
 
         loss = fusion_bm_loss + \
@@ -263,17 +264,27 @@ class BatfdPlus(LightningModule):
     def training_step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]] = None, batch_idx: Optional[int] = None,
     ) -> Tensor:
         loss_dict = self.step(batch)
+    
+        if torch.isnan(loss_dict["loss"]):
+            print(f"NaN in loss in {self.global_step}")
+            exit(1)
+            return None
 
-        self.log_dict({f"train_{k}": v for k, v in loss_dict.items()}, on_step=True, on_epoch=True,
+        self.log_dict({f"metrics/train_{k}": v for k, v in loss_dict.items() if k != "loss"}, on_step=True, on_epoch=True,
             prog_bar=False, sync_dist=self.distributed)
+        # only log the loss to progress bar
+        self.log("metrics/train_loss", loss_dict["loss"], on_step=True, on_epoch=True, prog_bar=True,
+            sync_dist=self.distributed, rank_zero_only=True)
         return loss_dict["loss"]
 
     def validation_step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]] = None, batch_idx: Optional[int] = None,
     ) -> Tensor:
         loss_dict = self.step(batch)
 
-        self.log_dict({f"val_{k}": v for k, v in loss_dict.items()}, on_step=True, on_epoch=True,
+        self.log_dict({f"metrics/val_{k}": v for k, v in loss_dict.items() if k != "loss"}, on_step=True, on_epoch=True,
             prog_bar=False, sync_dist=self.distributed)
+        self.log("metrics/val_loss", loss_dict["loss"], on_step=True, on_epoch=True, prog_bar=True,
+            sync_dist=self.distributed, rank_zero_only=True)
         return loss_dict["loss"]
 
     def predict_step(self, batch: Tensor, batch_idx: int, dataloader_idx: Optional[int] = None

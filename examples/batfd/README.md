@@ -9,8 +9,8 @@ Ensure you have the necessary environment setup. You can create a Conda environm
 # prepare the environment
 conda create -n batfd python=3.10 -y
 conda activate batfd
-conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=11.8 -c pytorch -c nvidia -y
-pip install avdeepfake1m toml tensorboard pytorch-lightning pandas
+conda install pytorch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 pytorch-cuda=11.8 -c pytorch -c nvidia -y
+pip install avdeepfake1m toml tensorboard pytorch-lightning pandas "av<14"
 ```
 
 ## Training
