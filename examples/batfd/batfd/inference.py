@@ -1,12 +1,13 @@
 import os.path
 from typing import Any, List, Optional
+import torch
 from torch import Tensor
 import pandas as pd
 from pathlib import Path
 from lightning.pytorch import LightningModule, Trainer, Callback
+from torch.utils.data import DataLoader
 
 from avdeepfake1m.loader import Metadata
-from torch.utils.data import DataLoader
 
 
 def nullable_index(obj, index):
@@ -38,9 +39,12 @@ class SaveToCsvCallback(Callback):
             batch_size = fusion_bm_map.shape[0]
 
             for i in range(batch_size):
-                temporal_size = batch[3][i]
+                temporal_size = torch.tensor(100) # the first value of `Batfd.get_meta_attr`
                 video_name = self.metadata[batch_idx * batch_size + i].file
                 n_frames = self.metadata[batch_idx * batch_size + i].video_frames
+                # if n_frames is not available, it should be in test set, and we can get it from the batch
+                if n_frames == -1:
+                    n_frames = batch[-1][i].cpu().numpy().item()
 
                 assert isinstance(video_name, str)
                 self.gen_df_for_batfd(fusion_bm_map[i], temporal_size, n_frames, os.path.join(
@@ -52,9 +56,12 @@ class SaveToCsvCallback(Callback):
             batch_size = fusion_bm_map.shape[0]
 
             for i in range(batch_size):
-                temporal_size = batch[3][i]
+                temporal_size = torch.tensor(100) # the first value of `BatfdPlus.get_meta_attr`
                 video_name = self.metadata[batch_idx * batch_size + i].file
                 n_frames = self.metadata[batch_idx * batch_size + i].video_frames
+                # if n_frames is not available, it should be in test set, and we can get it from the batch
+                if n_frames == -1:
+                    n_frames = batch[-1][i].cpu().numpy().item()
                 assert isinstance(video_name, str)
 
                 self.gen_df_for_batfd_plus(fusion_bm_map[i], nullable_index(fusion_start, i),
@@ -112,11 +119,9 @@ def inference_model(model_name: str, model: LightningModule, dataloader: DataLoa
     metadata: List[Metadata],
     max_duration: int, model_type: str,
     gpus: int = 1,
-    temp_dir: str = "output/",
-    subset: str = "test"
+    temp_dir: str = "output/"
 ) -> List[Metadata]:
     Path(os.path.join(temp_dir, model_name)).mkdir(parents=True, exist_ok=True)
-    assert subset in ["test", "val"]
 
     model.eval()
 

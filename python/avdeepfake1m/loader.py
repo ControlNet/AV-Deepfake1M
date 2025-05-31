@@ -105,6 +105,7 @@ class AVDeepfake1m(Dataset):
         file = self.file_list[index]
 
         video, audio, _ = read_video(os.path.join(self.root, self.subset, file))
+        n_frames = video.shape[0]
         video = F.interpolate(video.float().permute(1, 0, 2, 3)[None], size=(self.temporal_size, 96, 96))[0]
         audio = F.interpolate(audio.float().permute(1, 0)[None], size=self.audio_temporal_size, mode="linear")[0].permute(1, 0)
         video = self.video_transform(video)
@@ -113,7 +114,7 @@ class AVDeepfake1m(Dataset):
 
         outputs = [video, audio]
 
-        if self.subset != "test":
+        if self.subset not in ("test", "testA", "testB"):
             if self.is_plusplus:
                 subset_folder = self.subset
             else:
@@ -130,6 +131,9 @@ class AVDeepfake1m(Dataset):
 
             if self.return_file_name:
                 outputs.append(meta.file)
+
+        else:
+            outputs = outputs + [n_frames]
 
         return outputs
 
@@ -244,6 +248,7 @@ class AVDeepfake1mDataModule(LightningDataModule):
         get_meta_attr: Callable[[Metadata, Tensor, Tensor, Tensor], List[Any]] = _default_get_meta_attr,
         return_file_name: bool = False,
         is_plusplus: bool = False,
+        test_subset: Optional[str] = None
     ):
         super().__init__()
         self.root = root
@@ -260,11 +265,15 @@ class AVDeepfake1mDataModule(LightningDataModule):
         self.return_file_name = return_file_name
         self.is_plusplus = is_plusplus
         self.Dataset = AVDeepfake1m
+        if test_subset is None:
+            self.test_subset = "test" if not self.is_plusplus else "testA"
+        else:
+            self.test_subset = test_subset
 
     def setup(self, stage: Optional[str] = None) -> None:
         train_file_list = [meta["file"] for meta in read_json(os.path.join(self.root, "train_metadata.json"))]
         val_file_list = [meta["file"] for meta in read_json(os.path.join(self.root, "val_metadata.json"))]
-        with open(os.path.join(self.root, "test_files.txt"), "r") as f:
+        with open(os.path.join(self.root, f"{self.test_subset}_files.txt"), "r") as f:
             test_file_list = list(filter(lambda x: x != "", f.read().split("\n")))
 
         if self.take_val is not None:
@@ -285,7 +294,7 @@ class AVDeepfake1mDataModule(LightningDataModule):
             return_file_name=self.return_file_name,
             is_plusplus=self.is_plusplus
         )
-        self.test_dataset = self.Dataset("test", self.root, self.temporal_size, self.max_duration, self.fps,
+        self.test_dataset = self.Dataset(self.test_subset, self.root, self.temporal_size, self.max_duration, self.fps,
             file_list=test_file_list, get_meta_attr=self.get_meta_attr,
             require_match_scores=self.require_match_scores,
             return_file_name=self.return_file_name,

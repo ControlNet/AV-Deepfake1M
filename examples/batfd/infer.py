@@ -20,7 +20,7 @@ def main():
                         help="Root directory of the dataset.")
     parser.add_argument("--num_workers", type=int, default=8,
                         help="Number of workers for data loading.")
-    parser.add_argument("--subset", type=str, choices=["val", "test"], 
+    parser.add_argument("--subset", type=str, choices=["val", "test", "testA", "testB"], 
                         default="test", help="Dataset subset.")
     parser.add_argument("--gpus", type=int, default=1,
                         help="Number of GPUs. Set to 0 for CPU.")
@@ -62,23 +62,41 @@ def main():
         num_workers=args.num_workers,
         get_meta_attr=model.get_meta_attr,
         return_file_name=True,
-        is_plusplus=is_plusplus
+        is_plusplus=is_plusplus,
+        test_subset=args.subset if args.subset in ("test", "testA", "testB") else None
     )
     dm.setup()
 
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     Path(temp_dir).mkdir(parents=True, exist_ok=True)
 
-    if args.subset == "test":
+    if args.subset in ("test", "testA", "testB"):
         dataloader = dm.test_dataloader()
-        metadata_path = os.path.join(dm.root, "test_metadata.json")
+        metadata_path = os.path.join(dm.root, f"{args.subset}_metadata.json")
     elif args.subset == "val":
         dataloader = dm.val_dataloader()
         metadata_path = os.path.join(dm.root, "val_metadata.json")
     else:
         raise ValueError("Invalid subset")
 
-    metadata = [Metadata(**each, fps=25) for each in read_json(metadata_path)]
+    if os.path.exists(metadata_path):
+        metadata = [Metadata(**each, fps=25) for each in read_json(metadata_path)]
+    else:
+        metadata = [
+            Metadata(file=file_name, 
+                     original=None,
+                     split=args.subset,
+                     fake_segments=[],
+                     fps=25,
+                     visual_fake_segments=[],
+                     audio_fake_segments=[],
+                     audio_model="",
+                     modify_type="",
+                     # handle by the predictor in `inference_model`
+                     video_frames=-1,
+                     audio_frames=-1)
+            for file_name in dataloader.dataset.file_list
+        ]
 
     inference_model(
         model_name=config["name"], 
@@ -88,8 +106,7 @@ def main():
         max_duration=config["max_duration"], 
         model_type=config["model_type"], 
         gpus=args.gpus, 
-        temp_dir=temp_dir, 
-        subset=args.subset
+        temp_dir=temp_dir
     )
 
     post_process(
