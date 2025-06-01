@@ -562,13 +562,34 @@ class AVDeepfake1mPlusPlusVideo(Dataset):
         image_size: int = 96,
         take_num: Optional[int] = None,
         metadata: Optional[List[Metadata]] = None,
+        pred_mode: bool = False
     ):
         self.subset = subset
         self.data_root = data_root
         self.image_size = image_size
+        self.pred_mode = pred_mode
+
         if metadata is None:
-            metadata_json = read_json(os.path.join(self.data_root, f"{subset}_metadata.json"))
-            self.metadata = [Metadata(**meta, fps=25) for meta in metadata_json]
+            if self.pred_mode:
+                with open(os.path.join(self.data_root, f"{subset}_files.txt"), "r") as f:
+                    files = [line.strip() for line in f.readlines() if line.strip() != ""]
+                self.metadata = [ # dummy metadata for prediction
+                    Metadata(file=file_name, 
+                            original=None,
+                            split=subset,
+                            fake_segments=[],
+                            fps=25,
+                            visual_fake_segments=[],
+                            audio_fake_segments=[],
+                            audio_model="",
+                            modify_type="",
+                            video_frames=-1,
+                            audio_frames=-1)
+                    for file_name in files
+                ]
+            else:
+                metadata_json = read_json(os.path.join(self.data_root, f"{subset}_metadata.json"))
+                self.metadata = [Metadata(**meta, fps=25) for meta in metadata_json]
         else:
             self.metadata = metadata
 
@@ -584,5 +605,5 @@ class AVDeepfake1mPlusPlusVideo(Dataset):
         video, audio, _ = read_video(os.path.join(self.data_root, self.subset, meta.file))
         if self.image_size != 224:
             video = resize_video(video, (self.image_size, self.image_size))
-        label = len(meta.fake_periods) > 0
+        label = len(meta.fake_periods) > 0 if not self.pred_mode else False
         return video, audio, label
