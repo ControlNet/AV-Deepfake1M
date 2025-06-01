@@ -51,7 +51,7 @@ def iou_with_anchors(anchors_min, anchors_max, box_min, box_max):
     int_xmax = np.minimum(anchors_max, box_max)
     inter_len = np.maximum(int_xmax - int_xmin, 0.)
     union_len = len_anchors - inter_len + box_max - box_min
-    iou = inter_len / union_len
+    iou = inter_len / (union_len + 1e-8)
     return iou
 
 
@@ -62,7 +62,7 @@ def ioa_with_anchors(anchors_min, anchors_max, box_min, box_max):
     int_xmin = np.maximum(anchors_min, box_min)
     int_xmax = np.minimum(anchors_max, box_max)
     inter_len = np.maximum(int_xmax - int_xmin, 0.)
-    scores = np.divide(inter_len, len_anchors)
+    scores = np.divide(inter_len, len_anchors + 1e-8)
     return scores
 
 

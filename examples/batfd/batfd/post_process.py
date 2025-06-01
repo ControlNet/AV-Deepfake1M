@@ -60,11 +60,15 @@ def video_post_process(meta, model_name, fps=25, alpha=0.4, t1=0.2, t2=0.9, data
     proposal_list = []
 
     for j in range(len(df)):
-        proposal_list.append([
-            df.score.values[j],
-            df.begin.values[j].item(),
-            df.end.values[j].item()
-        ])
+        # round the score for saving json size
+        score = round(df.score.values[j], 4)
+        
+        if score > 0:
+            proposal_list.append([
+                score,
+                round(df.begin.values[j].item(), 2),
+                round(df.end.values[j].item(), 2)
+            ])
 
     return [meta.file, proposal_list]
 
