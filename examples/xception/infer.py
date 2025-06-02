@@ -14,6 +14,7 @@ parser.add_argument("--model", type=str)
 parser.add_argument("--batch_size", type=int, default=128)
 parser.add_argument("--subset", type=str, choices=["train", "val", "test", "testA", "testB"])
 parser.add_argument("--gpus", type=int, default=1)
+parser.add_argument("--resume", type=str, default=None)
 parser.add_argument("--take_num", type=int, default=None)
 
 if __name__ == '__main__':
@@ -32,9 +33,21 @@ if __name__ == '__main__':
 
     save_path = f"output/{args.model}_{args.subset}.txt"
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    with open(save_path, "w") as f:
+
+    processed_files = set()
+    if args.resume is not None:
+        with open(args.resume, "r") as f:
+            for line in f:
+                processed_files.add(line.split(";")[0])
+
+    with open(save_path, "a") as f:
         with torch.inference_mode():
-            for i, (video, _, _) in enumerate(tqdm(test_dataset)):
+            for i in tqdm(range(len(test_dataset))):
+                file_name = test_dataset.metadata[i].file
+                if file_name in processed_files:
+                    continue
+
+                video, _, _ = test_dataset[i]
                 # batch video as frames use batch_size
                 preds_video = []
                 for j in range(0, len(video), args.batch_size):
@@ -45,6 +58,5 @@ if __name__ == '__main__':
                 # choose the max prediction
                 pred = preds_video.max().item()
 
-                file_name = test_dataset.metadata[i].file
                 f.write(f"{file_name};{pred}\n")
                 f.flush()
