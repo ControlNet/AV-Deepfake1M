@@ -21,6 +21,8 @@ Train the BATFD or BATFD+ model using a TOML configuration file (e.g., `batfd.to
 python train.py --config ./batfd.toml --data_root /path/to/AV-Deepfake1M-PlusPlus
 ```
 
+If you meet the NaN issue when training BA-TFD+, that might be caused by the bug in PyTorch self attention ops, upgrading or changing the PyTorch version can solve it.
+
 ### Output
 
 *   **Checkpoints:** Model checkpoints are saved under `./ckpt/xception/`. The last checkpoint is saved as `last.ckpt`.
