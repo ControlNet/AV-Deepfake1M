@@ -146,6 +146,17 @@ The other parts of this project is under the CC BY-NC 4.0 license. See [LICENSE]
 
 If you find this work useful in your research, please cite it.
 
+The AV-Deepfake1M++ dataset paper:
+```bibtex
+@article{cai2025av,
+  title={AV-Deepfake1M++: A Large-Scale Audio-Visual Deepfake Benchmark with Real-World Perturbations},
+  author={Cai, Zhixi and Kuckreja, Kartik and Ghosh, Shreya and Chuchra, Akanksha and Khan, Muhammad Haris and Tariq, Usman and Gedeon, Tom and Dhall, Abhinav},
+  journal={arXiv preprint arXiv:2507.20579},
+  year={2025}
+}
+```
+
+The AV-Deepfake1M dataset paper:
 ```bibtex
 @inproceedings{cai2024av,
   title={AV-Deepfake1M: A large-scale LLM-driven audio-visual deepfake dataset},
