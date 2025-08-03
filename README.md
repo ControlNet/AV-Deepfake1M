@@ -20,9 +20,17 @@
     <a href="https://github.com/ControlNet/AV-Deepfake1M/blob/master/LICENSE">
         <img src="https://img.shields.io/badge/license-CC%20BY--NC%204.0-97ca00?style=flat-square">
     </a>
+</div>
+
+<div align="center">
     <a href="https://arxiv.org/abs/2311.15308">
         <img src="https://img.shields.io/badge/arXiv-2311.15308-b31b1b.svg?style=flat-square">
     </a>
+    <img src="https://cite.controlnet.space/-rpiDIoAAAAJ_5nxA0vEk-isC.svg">
+    <a href="https://arxiv.org/abs/2507.20579">
+        <img src="https://img.shields.io/badge/arXiv-2507.20579-b31b1b.svg?style=flat-square">
+    </a>
+    <img src="https://cite.controlnet.space/-rpiDIoAAAAJ_M3ejUd6NZC8C.svg">
 </div>
 
 This is the official repository for the paper 
@@ -30,7 +38,8 @@ This is the official repository for the paper
 
 ## News
 
-- [2025/04/08] 🏆 [**2025 1M-Deepfakes Challenge**](https://deepfakes1m.github.io/2025) starts. New database (2M videos!) - **AV-Deepfake1M++** is released
+- [2025/08/03] 🔥 [**AV-Deepfake1M++** technical report](https://arxiv.org/abs/2507.20579) is in arXiv.
+- [2025/04/08] 🏆 [**2025 1M-Deepfakes Challenge**](https://deepfakes1m.github.io/2025) starts. New dataset (2M videos!) - **AV-Deepfake1M++** is released.
 - [2024/10/13] 🚀 [**PYPI package**](https://pypi.org/project/avdeepfake1m/) is released.
 - [2024/07/15] 🔥 [**AV-Deepfake1M** paper](https://dl.acm.org/doi/abs/10.1145/3664647.3680795) is accepted in MM 2024.
 - [2024/03/09] 🏆 [**2024 1M-Deepfakes Challenge**](https://deepfakes1m.github.io/2024) starts.
