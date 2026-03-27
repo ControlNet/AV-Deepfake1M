@@ -38,6 +38,7 @@ This is the official repository for the paper
 
 ## News
 
+- [2026/03/22] 🔥 [**2026 Deepfake Explainability Challenge**](https://explainable-deepfake-detection.github.io/) starts in MM 2026.
 - [2025/08/03] 🔥 [**AV-Deepfake1M++** technical report](https://arxiv.org/abs/2507.20579) is in arXiv.
 - [2025/04/08] 🏆 [**2025 1M-Deepfakes Challenge**](https://deepfakes1m.github.io/2025) starts. New dataset (2M videos!) - **AV-Deepfake1M++** is released.
 - [2024/10/13] 🚀 [**PYPI package**](https://pypi.org/project/avdeepfake1m/) is released.
